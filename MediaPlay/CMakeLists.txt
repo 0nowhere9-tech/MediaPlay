@@ -22,6 +22,8 @@ qt_add_executable(MediaPlayer
     src/JsonLoader.h
     src/ExtractionManager.cpp
     src/ExtractionManager.h
+    src/SettingsManager.cpp
+    src/SettingsManager.h
     providers/BaseProvider.h
     providers/HentaiCityProvider.cpp
     providers/HentaiCityProvider.h
@@ -33,6 +35,8 @@ qt_add_executable(MediaPlayer
     extractors/ExtractorRegistry.h
     extractors/ExtractorRegistry.cpp
 )
+
+set_source_files_properties(qml/SettingsStore.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 qt_add_qml_module(MediaPlayer
     URI mediaplayer
@@ -55,6 +59,7 @@ qt_add_qml_module(MediaPlayer
         qml/SettingsPage.qml
         qml/SettingsSection.qml
         qml/SettingSlider.qml
+        qml/SettingToggle.qml
     RESOURCES
         # Resource prefix will be :/qt/qml/mediaplayer/resources/sample/all_videos.json
         # Access via "qrc:/qt/qml/mediaplayer/resources/sample/all_videos.json"

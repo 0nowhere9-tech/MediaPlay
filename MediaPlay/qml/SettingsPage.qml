@@ -47,11 +47,18 @@ Item {
                 SettingSlider {
                     label:        "Scroll speed"
                     description:  "Mouse wheel sensitivity on the videos grid"
-                    from:         1.0
-                    to:           10.0
-                    stepSize:     0.1
-                    value:        SettingsStore.videos.scrollSpeed
-                    onValueChanged: val => SettingsStore.videos.scrollSpeed = val
+                    from:         0.0
+                    to:           5.0
+                    stepSize:     0.01
+                    value:        SettingsStore.videosScrollSpeed
+                    onCommitted:  val => SettingsStore.videosScrollSpeed = val
+                }
+
+                SettingToggle {
+                    label:       "Infinite scroll"
+                    description: "Auto-load more videos at the bottom"
+                    value:       SettingsStore.videosInfiniteScroll
+                    onCommitted: val => SettingsStore.videosInfiniteScroll = val
                 }
             }
 

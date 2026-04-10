@@ -53,15 +53,29 @@ Item {
         interactive: true
         flickDeceleration: 2500
 
+        property real targetContentY: contentY
+
+        NumberAnimation {
+            id: scrollAnim
+            target: grid
+            property: "contentY"
+            duration: 200
+            easing.type: Easing.OutQuad
+        }
+
         WheelHandler {
             id: wheelHandler
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            blocking: true
             onWheel: (event) => {
-                var delta = event.angleDelta.y / 120        // steps (usually ±1)
-                var pixels = delta * 120 * SettingsStore.videos.scrollSpeed
-                grid.contentY = Math.max(
+                var delta = event.angleDelta.y / 120
+                var pixels = delta * 120 * SettingsStore.videosScrollSpeed
+                grid.targetContentY = Math.max(
                     grid.originY,
                     Math.min(grid.originY + grid.contentHeight - grid.height,
-                             grid.contentY - pixels))
+                             grid.targetContentY - pixels))
+                scrollAnim.to = grid.targetContentY
+                scrollAnim.restart()
             }
         }
 

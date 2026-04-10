@@ -11,10 +11,15 @@ Item {
     property real   stepSize:     0.1
 
     // Bind this to your settings property. The slider reads it on load
-    // and writes back via onValueChanged when the user drags.
+    // and writes back via onCommitted when the user releases the knob.
     property real   value:        from
 
     readonly property real currentValue: _value
+
+    // Emitted once when the user releases the knob — carries the final value.
+    // Named "committed" to avoid conflicting with the auto-generated
+    // onValueChanged signal that QML creates for the `value` property above.
+    signal committed(real val)
 
     Layout.fillWidth: true
     implicitHeight: 52
@@ -103,7 +108,7 @@ Item {
 
                 onPressed:         (e) => { root._value = valueAt(e.x) }
                 onPositionChanged: (e) => { if (pressed) root._value = valueAt(e.x) }
-                onReleased:        root.value = root._value
+                onReleased:        { root.value = root._value; root.committed(root._value) }
             }
         }
 
