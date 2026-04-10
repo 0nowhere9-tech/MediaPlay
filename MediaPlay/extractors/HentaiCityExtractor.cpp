@@ -19,7 +19,7 @@
 QString HentaiCityExtractor::fetch(const QString &url) const
 {
     QNetworkAccessManager nam;
-    QNetworkRequest req(QUrl(url));
+    QNetworkRequest req{QUrl(url)};
     req.setRawHeader("User-Agent", kUserAgent);
     req.setRawHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
     req.setRawHeader("Accept-Language", "en-US,en;q=0.5");
@@ -67,11 +67,12 @@ int HentaiCityExtractor::lastPageFromHtml(const QString &html) const
 // We strip the tracker prefix to get the canonical URL.
 QList<QString> HentaiCityExtractor::videoUrlsFromHtml(const QString &html) const
 {
-    static const QRegularExpression re(
-        QStringLiteral(R"(href="(https://www\.hentaicity\.com/(?:click/\d+-\d+/)?video/[^"]+)")"));
+  static const QRegularExpression re(
+      QStringLiteral(R"REGEX(href="(https://www\.hentaicity\.com/(?:click/\d+-\d+/)?video/[^"]+)")REGEX")
+      );
 
-    QSet<QString> seen;
-    QList<QString> urls;
+  QSet<QString> seen;
+  QList<QString> urls;
 
     auto it = re.globalMatch(html);
     while (it.hasNext()) {

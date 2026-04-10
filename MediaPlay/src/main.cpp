@@ -1,9 +1,10 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QStandardPaths>
 #include <QUrl>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include "VideoModel.h"
 #include "ExtractionManager.h"
 
@@ -16,29 +17,23 @@ int main(int argc, char *argv[])
     app.setOrganizationName("MediaPlayer");
     app.setApplicationVersion("1.0");
 
-    qmlRegisterType<VideoModel>("mediaplayer", 1, 0, "VideoModel");
+    // Resolve resources/sources/all_hen.json relative to the binary.
+    // When running as ./build/MediaPlayer from the project root, this
+    // points to <project>/resources/sources/all_hen.json — a real,
+    // writable file that lives in the source tree.
+    const QString jsonPath =
+        QCoreApplication::applicationDirPath() + u"/../resources/sources/all_hen.json"_s;
 
-    // Writable JSON path — lives in the app's data location so it survives
-    // between runs and can be written to at runtime.
-    const QString dataDir =
-        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir().mkpath(dataDir);
-    const QString jsonPath = dataDir + u"/all_videos.json"_s;
-
-    // On first run, seed from the bundled sample so the UI isn't empty.
+    // Create the directory and an empty array if the file doesn't exist yet.
+    QDir().mkpath(QFileInfo(jsonPath).absolutePath());
     if (!QFile::exists(jsonPath)) {
-        QFile::copy(u":/qt/qml/mediaplayer/resources/sample/all_videos.json"_s,
-                    jsonPath);
-        QFile::setPermissions(jsonPath,
-            QFile::ReadOwner | QFile::WriteOwner |
-            QFile::ReadUser  | QFile::WriteUser);
+        QFile f(jsonPath);
+        if (f.open(QIODevice::WriteOnly))
+            f.write("[]");
     }
-
-    QQmlApplicationEngine engine;
 
     VideoModel defaultModel;
     defaultModel.loadFromFile(jsonPath);
-    engine.rootContext()->setContextProperty(u"videoModel"_s, &defaultModel);
 
     ExtractionManager extractionManager;
     extractionManager.setOutputPath(jsonPath);
@@ -49,12 +44,14 @@ int main(int argc, char *argv[])
         defaultModel.appendItem(item);
     });
 
-    // Reload the model from disk after a run finishes (picks up deduplication).
+    // Reload from disk after a run finishes (picks up deduplication).
     QObject::connect(&extractionManager, &ExtractionManager::finished,
                      [&defaultModel, jsonPath](const QString &, int, int) {
         defaultModel.loadFromFile(jsonPath);
     });
 
+    QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty(u"videoModel"_s,        &defaultModel);
     engine.rootContext()->setContextProperty(u"extractionManager"_s, &extractionManager);
 
     const QUrl url(u"qrc:/qt/qml/mediaplayer/qml/Main.qml"_s);

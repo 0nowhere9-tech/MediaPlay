@@ -65,12 +65,9 @@ Window {
                     video: root.activeVideo
                 }
 
-                SourcesPage {
-                    onRefreshSource: sourceId => {
-                        // TODO: forward to C++ ProviderRegistry to re-fetch
-                        console.log("Refresh requested for source:", sourceId)
-                    }
-                }
+                // SourcesPage talks to extractionManager directly via the
+                // context property — no signal forwarding needed here.
+                SourcesPage {}
             }
         }
     }

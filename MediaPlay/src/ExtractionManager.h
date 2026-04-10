@@ -9,44 +9,39 @@
 // ExtractionManager — orchestrates a full two-phase extraction run
 // for a single source, on a background thread.
 //
-// Usage (from QML via a context property, or C++):
+// Phase 1 — "listing":  fetches the index pages to collect video page URLs.
+// Phase 2 — "fetching": scrapes each video page; skips already-known URLs.
 //
-//   manager->refresh("HentaiCity");
-//
-// The manager will:
-//   1. Look up the extractor in ExtractorRegistry.
-//   2. Call fetchListing() to get all video page URLs.
-//   3. Call fetchVideoData() for each URL, emitting videoReady()
-//      as each item completes so the UI can update incrementally.
-//   4. Append all successful items to the JSON file.
-//   5. Emit finished() when all items are done, or error() on failure.
-//
-// All network work runs in a QThread; signals are cross-thread safe.
+// QML-exposed properties:
+//   running     bool   — true while a run is active
+//   progress    int    — 0-100 within the current phase
+//   phase       string — "listing" | "fetching" | ""
+//   statusText  string — human-readable one-liner for the UI
+//   eta         string — estimated time remaining (phase 2 only), e.g. "3m 12s"
 
 class ExtractionManager : public QObject
 {
     Q_OBJECT
 
-    // Exposed to QML so SourcesPage can show a spinner / progress bar.
-    Q_PROPERTY(bool running READ isRunning NOTIFY runningChanged)
-    Q_PROPERTY(int  progress READ currentProgress NOTIFY progressChanged)
+    Q_PROPERTY(bool    running    READ isRunning        NOTIFY runningChanged)
+    Q_PROPERTY(int     progress   READ currentProgress  NOTIFY progressChanged)
+    Q_PROPERTY(QString phase      READ currentPhase     NOTIFY phaseChanged)
+    Q_PROPERTY(QString statusText READ currentStatus    NOTIFY statusChanged)
+    Q_PROPERTY(QString eta        READ currentEta       NOTIFY etaChanged)
 
 public:
     explicit ExtractionManager(QObject *parent = nullptr);
 
-    bool isRunning()      const { return m_running; }
-    int  currentProgress() const { return m_progress; }
+    bool    isRunning()       const { return m_running; }
+    int     currentProgress() const { return m_progress; }
+    QString currentPhase()    const { return m_phase; }
+    QString currentStatus()   const { return m_statusText; }
+    QString currentEta()      const { return m_eta; }
 
-    // Path to the JSON file where extracted items are persisted.
-    // Defaults to the bundled sample file; override before calling refresh().
     void setOutputPath(const QString &path) { m_outputPath = path; }
 
 public slots:
-    // Start a refresh for the named source (lowercase, e.g. "hentaicity").
-    // Safe to call from QML. Ignored if a run is already in progress.
     void refresh(const QString &sourceName);
-
-    // Cancel the running extraction after the current video finishes.
     void cancel();
 
 signals:
@@ -55,16 +50,28 @@ signals:
     void error(const QString &sourceName, const QString &message);
     void runningChanged();
     void progressChanged();
+    void phaseChanged();
+    void statusChanged();
+    void etaChanged();
 
 private:
     void runExtraction(const QString &sourceName);
     void appendItemsToJson(const QList<VideoItem> &items) const;
+
     void setRunning(bool v);
     void setProgress(int v);
+    void setPhase(const QString &v);
+    void setStatus(const QString &v);
+    void setEta(const QString &v);
+
+    static QString formatEta(qint64 seconds);
 
     bool           m_running   = false;
     bool           m_cancelled = false;
     int            m_progress  = 0;
+    QString        m_phase;
+    QString        m_statusText;
+    QString        m_eta;
     QFuture<void>  m_future;
     QString        m_outputPath;
     mutable QMutex m_writeMutex;

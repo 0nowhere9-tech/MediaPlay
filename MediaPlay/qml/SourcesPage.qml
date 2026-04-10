@@ -2,52 +2,34 @@ import QtQuick
 import QtQuick.Layouts
 
 // SourcesPage
-// Displays all registered video sources with per-source refresh buttons.
-// Reads extractionManager.running and extractionManager.progress (context props)
-// to reflect live extraction state in the UI.
-//
-// To add a new source: append an entry to the `sources` model below,
-// matching the id to the extractor's sourceName() (case-insensitive).
+// Displays all registered video sources with per-source refresh controls.
+// Reads extractionManager properties directly (context property from C++):
+//   extractionManager.running, .progress, .phase, .statusText, .eta
 
 Item {
     id: root
 
-    // Source registry — mirrors ExtractorRegistry at the UI level.
-    // status is driven by extractionManager signals below.
     property var sources: [
         {
             id:          "hentaicity",
             label:       "Hentai City",
             description: "Streams from HentaiCity · ~4,500 videos",
-            status:      "idle",
-            progress:    0
+            status:      "idle"
         }
     ]
 
-    // Keep source status in sync with extractionManager signals.
     Connections {
         target: extractionManager
 
         function onRunningChanged() {
             if (!extractionManager.running) {
-                // Run finished — mark all refreshing sources as ok
+                // Mark all refreshing sources as ok when the run ends
                 for (var i = 0; i < root.sources.length; ++i) {
                     if (root.sources[i].status === "refreshing") {
                         var updated = root.sources.slice()
-                        updated[i] = Object.assign({}, updated[i], { status: "ok", progress: 100 })
+                        updated[i] = Object.assign({}, updated[i], { status: "ok" })
                         root.sources = updated
                     }
-                }
-            }
-        }
-
-        function onProgressChanged() {
-            for (var i = 0; i < root.sources.length; ++i) {
-                if (root.sources[i].status === "refreshing") {
-                    var updated = root.sources.slice()
-                    updated[i] = Object.assign({}, updated[i],
-                        { progress: extractionManager.progress })
-                    root.sources = updated
                 }
             }
         }
@@ -56,7 +38,7 @@ Item {
             for (var i = 0; i < root.sources.length; ++i) {
                 if (root.sources[i].id.toLowerCase() === sourceName.toLowerCase()) {
                     var updated = root.sources.slice()
-                    updated[i] = Object.assign({}, updated[i], { status: "error", progress: 0 })
+                    updated[i] = Object.assign({}, updated[i], { status: "error" })
                     root.sources = updated
                 }
             }
@@ -67,7 +49,7 @@ Item {
         for (var i = 0; i < sources.length; ++i) {
             if (sources[i].id === sourceId) {
                 var updated = sources.slice()
-                updated[i] = Object.assign({}, updated[i], { status: "refreshing", progress: 0 })
+                updated[i] = Object.assign({}, updated[i], { status: "refreshing" })
                 sources = updated
                 break
             }
@@ -75,9 +57,6 @@ Item {
         extractionManager.refresh(sourceId)
     }
 
-    // ---------------------------------------------------------------------------
-    // Layout
-    // ---------------------------------------------------------------------------
     ColumnLayout {
         anchors { top: parent.top; left: parent.left; right: parent.right
                   topMargin: 32; leftMargin: 32; rightMargin: 32 }
@@ -103,8 +82,15 @@ Item {
                 sourceLabel:       modelData.label
                 sourceDescription: modelData.description
                 sourceStatus:      modelData.status
-                sourceProgress:    modelData.progress
-                onRefreshClicked:  root.startRefresh(modelData.id)
+
+                // Wire the new detail props directly from extractionManager.
+                // Only meaningful while this source is the one refreshing.
+                sourcePhase:      modelData.status === "refreshing" ? extractionManager.phase      : ""
+                sourceProgress:   modelData.status === "refreshing" ? extractionManager.progress   : 0
+                sourceStatusText: modelData.status === "refreshing" ? extractionManager.statusText : ""
+                sourceEta:        modelData.status === "refreshing" ? extractionManager.eta        : ""
+
+                onRefreshClicked: root.startRefresh(modelData.id)
             }
         }
     }
