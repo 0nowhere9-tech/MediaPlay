@@ -152,7 +152,7 @@ Rectangle {
 
                 Text {
                     text: root.sourcePhase === "listing"
-                          ? root.sourceProgress + "%"
+                          ? root.sourceProgress + "%  ·  " + root.sourceStatusText
                           : root.sourceStatusText
                     font.pixelSize: 11
                     color: "#666680"

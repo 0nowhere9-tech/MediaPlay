@@ -69,7 +69,13 @@ void ExtractionManager::runExtraction(const QString &sourceName)
     setEta(QString());
 
     qDebug() << "ExtractionManager: starting listing for" << sourceName;
-    const QList<QString> pageUrls = extractor->fetchListing();
+
+    const QList<QString> pageUrls = extractor->fetchListing(
+        [this](int done, int total) {
+            if (total > 0)
+                setProgress(done * 100 / total);
+            setStatus(QStringLiteral("Page %1 / %2…").arg(done).arg(total));
+        });
 
     if (pageUrls.isEmpty()) {
         emit error(sourceName, QStringLiteral("Listing returned no URLs — check network or extractor"));
@@ -77,7 +83,8 @@ void ExtractionManager::runExtraction(const QString &sourceName)
         return;
     }
 
-    setProgress(100);
+    // Clear listing progress before entering phase 2
+    setProgress(0);
     setStatus(QStringLiteral("Got %1 URLs").arg(pageUrls.size()));
 
     // ── Load already-known URLs ───────────────────────────────────

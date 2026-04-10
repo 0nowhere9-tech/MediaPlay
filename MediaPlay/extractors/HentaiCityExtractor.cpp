@@ -91,7 +91,7 @@ QList<QString> HentaiCityExtractor::videoUrlsFromHtml(const QString &html) const
 // ---------------------------------------------------------------------------
 // Phase 1: fetchListing
 // ---------------------------------------------------------------------------
-QList<QString> HentaiCityExtractor::fetchListing() const
+QList<QString> HentaiCityExtractor::fetchListing(ListingProgressCb progressCb) const
 {
     QList<QString> allUrls;
 
@@ -106,6 +106,9 @@ QList<QString> HentaiCityExtractor::fetchListing() const
     int lastPage = lastPageFromHtml(page1Html);
     qDebug() << "HentaiCityExtractor: found" << lastPage << "pages";
 
+    // Report progress after page 1 — now we know the total
+    if (progressCb) progressCb(1, lastPage);
+
     for (int page = 2; page <= lastPage; ++page) {
         QString url  = QString::fromLatin1(kListingBase).arg(page);
         QString html = fetch(url);
@@ -115,6 +118,8 @@ QList<QString> HentaiCityExtractor::fetchListing() const
         }
         allUrls.append(videoUrlsFromHtml(html));
         qDebug() << "HentaiCityExtractor: page" << page << "—" << allUrls.size() << "URLs so far";
+
+        if (progressCb) progressCb(page, lastPage);
     }
 
     qDebug() << "HentaiCityExtractor: listing complete —" << allUrls.size() << "videos";

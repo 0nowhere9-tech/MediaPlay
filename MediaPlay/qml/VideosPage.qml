@@ -48,6 +48,23 @@ Item {
         cellWidth:  Math.floor(grid.width / Math.max(1, Math.floor(grid.width / 320)))
         cellHeight: cellWidth * 0.72
 
+        // Disable built-in wheel scrolling — handled below via WheelHandler
+        // so we can apply the speed multiplier from Settings
+        interactive: true
+        flickDeceleration: 2500
+
+        WheelHandler {
+            id: wheelHandler
+            onWheel: (event) => {
+                var delta = event.angleDelta.y / 120        // steps (usually ±1)
+                var pixels = delta * 120 * SettingsStore.videos.scrollSpeed
+                grid.contentY = Math.max(
+                    grid.originY,
+                    Math.min(grid.originY + grid.contentHeight - grid.height,
+                             grid.contentY - pixels))
+            }
+        }
+
         delegate: VideoCard {
             width:  grid.cellWidth  - 16
             height: grid.cellHeight - 16

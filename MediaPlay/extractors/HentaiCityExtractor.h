@@ -6,10 +6,11 @@
 
 // HentaiCityExtractor — two-phase extractor for HentaiCity.
 //
-// Phase 1  fetchListing()
+// Phase 1  fetchListing(progressCb)
 //   Paginates through https://www.hentaicity.com/videos/straight/all-recent-{N}.html
 //   collecting every unique video page URL.  Stops at the last page number
 //   found in the pagination links (or kMaxPages, whichever is smaller).
+//   Calls progressCb(pagesDone, totalPages) after each page is fetched.
 //
 // Phase 2  fetchVideoData(pageUrl)
 //   Fetches each video page and extracts metadata from:
@@ -22,7 +23,7 @@ class HentaiCityExtractor : public BaseExtractor
 public:
     QString sourceName() const override { return QStringLiteral("HentaiCity"); }
 
-    QList<QString> fetchListing() const override;
+    QList<QString> fetchListing(ListingProgressCb progressCb = {}) const override;
     bool fetchVideoData(const QString &pageUrl, VideoItem &item) const override;
 
 private:
@@ -36,6 +37,6 @@ private:
     QString fetch(const QString &url) const;
 
     // Parse helpers
-    int  lastPageFromHtml(const QString &html)           const;
+    int  lastPageFromHtml(const QString &html)            const;
     QList<QString> videoUrlsFromHtml(const QString &html) const;
 };

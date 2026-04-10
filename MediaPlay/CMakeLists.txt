@@ -51,6 +51,10 @@ qt_add_qml_module(MediaPlayer
         qml/MetaField.qml
         qml/SourcesPage.qml
         qml/SourceRow.qml
+        qml/SettingsStore.qml
+        qml/SettingsPage.qml
+        qml/SettingsSection.qml
+        qml/SettingSlider.qml
     RESOURCES
         # Resource prefix will be :/qt/qml/mediaplayer/resources/sample/all_videos.json
         # Access via "qrc:/qt/qml/mediaplayer/resources/sample/all_videos.json"

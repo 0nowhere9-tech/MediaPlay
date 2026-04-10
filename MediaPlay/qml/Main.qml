@@ -35,9 +35,10 @@ Window {
                 Layout.fillWidth: true
                 pageTitle: {
                     switch (root.currentPage) {
-                        case "player":  return "Now Playing"
-                        case "sources": return "Sources"
-                        default:        return "Videos"
+                        case "player":   return "Now Playing"
+                        case "sources":  return "Sources"
+                        case "settings": return "Settings"
+                        default:         return "Videos"
                     }
                 }
                 onBackRequested: { root.currentPage = "videos" }
@@ -48,9 +49,12 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 currentIndex: {
-                    if (root.currentPage === "player")  return 1
-                    if (root.currentPage === "sources") return 2
-                    return 0
+                    switch (root.currentPage) {
+                        case "player":   return 1
+                        case "sources":  return 2
+                        case "settings": return 3
+                        default:         return 0
+                    }
                 }
 
                 VideosPage {
@@ -68,6 +72,8 @@ Window {
                 // SourcesPage talks to extractionManager directly via the
                 // context property — no signal forwarding needed here.
                 SourcesPage {}
+
+                SettingsPage {}
             }
         }
     }
