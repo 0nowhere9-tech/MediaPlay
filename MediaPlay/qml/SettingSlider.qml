@@ -15,7 +15,6 @@ Item {
     property real   value:        from
 
     readonly property real currentValue: _value
-    signal valueChanged(real val)
 
     Layout.fillWidth: true
     implicitHeight: 52
@@ -24,7 +23,7 @@ Item {
     property real _value: root.value
 
     // If value changes externally (e.g. persistence load), sync in
-    onValueChanged: (v) => { _value = v }
+    onValueChanged: { _value = value }
 
     function _snap(raw) {
         if (stepSize > 0)
@@ -104,7 +103,7 @@ Item {
 
                 onPressed:         (e) => { root._value = valueAt(e.x) }
                 onPositionChanged: (e) => { if (pressed) root._value = valueAt(e.x) }
-                onReleased:        root.valueChanged(root._value)
+                onReleased:        root.value = root._value
             }
         }
 
